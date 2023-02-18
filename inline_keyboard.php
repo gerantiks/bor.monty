@@ -7,7 +7,7 @@ $keyboard = json_encode([
                 "callback_data" => "1"
             ],
             [
-                "text" => "Відправити",
+                "text" => "Все вірно?",
                 "callback_data" => "2"
             ]
         ]

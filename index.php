@@ -13,6 +13,8 @@
      * @var array $keyboard;
      * @var $token;
      * @var $linkNgrok;
+     * @var $passwordSmtp;
+     * @var $addressSmtp;
      */
 
     $linkWebhook = "https://api.telegram.org/bot$token/setwebhook?url=$linkNgrok";
@@ -27,12 +29,11 @@
     $callbackData= $data['callback_query']['data']; //data через кнопки;
 
 
-    $getLastId = getMaxIdSql();
-    $getLastData = getDataInSql();
-    function sendEmail()
+    function sendEmail($addressSmtp, $passwordSmtp)
     {
-        $sendEmailAdress = "krot_vlad18@ukr.net";
-        $topicEmail = "Test massage";
+        $sendEmailAdress = "";
+
+        $topicEmail = "List";
 
         $mail = new PHPMailer();
 
@@ -44,17 +45,13 @@
 
         $mail->Port = 587;
 
-        //$mail->SMTPSecure = "tls";
-
         $mail->SMTPAuth = true;
 
-        $mail->Username = 'bzihdch@gmail.com';
+        $mail->Username =  $addressSmtp;
 
-        $mail->Password = 'hmbkktqblvbmgnvc';
+        $mail->Password = $passwordSmtp;
 
         $mail->setFrom('cajihe4885@brandoza.com', 'Anonim');
-
-        //$mail->addReplyTo('replyto@example.com', 'First Last');
 
         $mail->addAddress($sendEmailAdress, "");
 
@@ -76,13 +73,19 @@
 
 
 
-    if ($getLastId == 'email')
+    if (getStatusUserMessage() == '1')
     {
         $sendUserMessage = "Введіть текст повідомлення:";
+        $statusId = '2';
+
     }
+    elseif (getStatusUserMessage() == '2')
+    {
+        $sendUserMessage = 'Сообщение отправлено';
+        $statusId = '3';
 
+    }
     else
-
     {
         switch ($getUserMessage)
         {
@@ -93,6 +96,7 @@
 
             case "email":
                 $sendUserMessage = "Введіть будь-ласка вашу почту, нижче без помилок і повнстю";
+                $statusId = '1';
                 break;
 
 
@@ -100,10 +104,15 @@
                 $sendUserMessage = "Ваш лист відправлено";
                 break;
 
+            case ("мяу" || "кот" || "кіт"):
+                $sendUserMessage = "😽";
+                break;
+
             default:
-                $sendUserMessage = "Перепрошую, проте я вас не розумію, Мявка 😒 !";
+                $sendUserMessage = "Не зрозуміло";
         }
     }
+
 
     if (isset($data['callback_query']))
     {
@@ -128,12 +137,18 @@
 
 //    if ($data["callback_query"]["data"] == "1")
 //        $sendUserMessage = "Результат получил";
+    if (isset($statusId)) //проверка на наличие статуса
+    {
+        InsertIdTextStatus($getChatId, $getUserMessage, $statusId);
+    } else
+    {
+        InsertIdText($getChatId, $getUserMessage); // записивает в базу данних;
+    }
 
-    InsertIntoSql($getChatId, $getUserMessage); // записивает в базу данних;
-    //writeDataInSql($getDataKeyboard);
-    sendAnswerBotButton($token, $sendUserMessage, $keyboard);
 
-    function sendTelegramText($token, $sendUserMessage)
+    sendTelegram($token, $sendUserMessage);
+
+    function sendTelegram($token, $sendUserMessage)
     {
         file_get_contents("https://api.telegram.org/bot$token/sendMessage?".$sendUserMessage);
         // | читает файл в строку, используеться http_build_query для генерации URL запроса что содержит масив или обьект.
