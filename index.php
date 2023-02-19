@@ -29,9 +29,8 @@
     $callbackData= $data['callback_query']['data']; //data через кнопки;
 
 
-    function sendEmail($addressSmtp, $passwordSmtp)
+    function sendEmail($addressSmtp, $passwordSmtp, $sendEmailAddress, $textEmail)
     {
-        $sendEmailAdress = "";
 
         $topicEmail = "List";
 
@@ -53,13 +52,13 @@
 
         $mail->setFrom('cajihe4885@brandoza.com', 'Anonim');
 
-        $mail->addAddress($sendEmailAdress, "");
+        $mail->addAddress($sendEmailAddress, "");
 
         $mail->Subject = $topicEmail;
 
         //$mail->msgHTML(file_get_contents('contents.html'), __DIR__);
 
-        $mail->Body = 'Helloy my first list';
+        $mail->Body = $textEmail;
 
         //$mail->addAttachment('images/phpmailer_mini.png');
 
@@ -72,7 +71,6 @@
     }
 
 
-
     if (getStatusUserMessage() == '1')
     {
         $sendUserMessage = "Введіть текст повідомлення:";
@@ -81,8 +79,19 @@
     }
     elseif (getStatusUserMessage() == '2')
     {
-        $sendUserMessage = 'Сообщение отправлено';
+        $sendUserMessage = 'Пару секунд... Підтвердіть відправку натиснувши кнопку внизу';
         $statusId = '3';
+        $callback = ['callback_query'=> "0" ];
+        $data = array_merge($data, $callback);
+
+    }
+    elseif (getStatusUserMessage() == '3')
+    {
+        $sendEmailAddress = getAddressEmail();  // получаем адресс;
+        $textEmail = getTextEmail(); // получаем сообщение;
+        //sendEmail($addressSmtp, $passwordSmtp, $sendEmailAddress, $textEmail);
+        DropTable();
+        $sendUserMessage = 'Повідомлення надіслано';
 
     }
     else
@@ -104,39 +113,13 @@
                 $sendUserMessage = "Ваш лист відправлено";
                 break;
 
-            case ("мяу" || "кот" || "кіт"):
-                $sendUserMessage = "😽";
-                break;
-
             default:
                 $sendUserMessage = "Не зрозуміло";
         }
     }
 
 
-    if (isset($data['callback_query']))
-    {
-        $sendUserMessage = "Сообщение получено";
-        $sendUserMessage = http_build_query(
-            [
-                'chat_id' => $callbackChatId ,
-                'text' =>$sendUserMessage
-            ]
-        );
-    } else
-    {
-        $sendUserMessage = http_build_query(
-            [
-                'chat_id' => $getChatId,
-                'text' =>$sendUserMessage
-            ]
-        );
-    }
 
-
-
-//    if ($data["callback_query"]["data"] == "1")
-//        $sendUserMessage = "Результат получил";
     if (isset($statusId)) //проверка на наличие статуса
     {
         InsertIdTextStatus($getChatId, $getUserMessage, $statusId);
@@ -146,15 +129,46 @@
     }
 
 
-    sendTelegram($token, $sendUserMessage);
+    if ($data['callback_query'] == '0')
+    {
+        $sendUserMessage = http_build_query(
+            [
+                'chat_id' => $getChatId,
+                'text' =>$sendUserMessage
+            ]
+        );
+        sendAnswerBotButton($token, $sendUserMessage, $keyboard);
+    }
+    elseif(isset($callbackChatId)) //проверка на наличие запроса $callbackData
+    {
+        {
+            $sendUserMessage = http_build_query(
+                [
+                    'chat_id' => $callbackChatId,
+                    'text' =>$sendUserMessage
+                ]
+            );
+            sendTelegram($token, $sendUserMessage);
+        }
+    }
+    else
+    {
+        $sendUserMessage = http_build_query(
+            [
+                'chat_id' => $getChatId,
+                'text' =>$sendUserMessage
+            ]
+        );
+        sendTelegram($token, $sendUserMessage);
+    }
+
+
 
     function sendTelegram($token, $sendUserMessage)
     {
         file_get_contents("https://api.telegram.org/bot$token/sendMessage?".$sendUserMessage);
         // | читает файл в строку, используеться http_build_query для генерации URL запроса что содержит масив или обьект.
     }
-
-
 
     function sendAnswerBotButton($token, $sendUserMessage, $keyboard)
     {

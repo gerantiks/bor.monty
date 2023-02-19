@@ -3,11 +3,11 @@ $keyboard = json_encode([
     "inline_keyboard" => [
         [
             [
-                "text" => "Назад",
+                "text" => "Повернутись назад",
                 "callback_data" => "1"
             ],
             [
-                "text" => "Все вірно?",
+                "text" => "Відправити ?",
                 "callback_data" => "2"
             ]
         ]

@@ -26,6 +26,28 @@ try {
         $row = $rezult->fetch();
         return $row['status'];
     }
+    function getAddressEmail()
+    {
+        $conn = new PDO("mysql:localhost:3306;dbname = bot", "root", "");
+        $sql = "SELECT * FROM bot.message WHERE id = (SELECT MAX(`id`) FROM bot.message WHERE `status` = 2)";
+        $result = $conn->query($sql);
+        $row = $result->fetch();
+        return $row['text'];
+    }
+    function getTextEmail()
+    {
+        $conn = new PDO("mysql:localhost:3306;dbname = bot; charset = utf8", "root", "");
+        $sql = "SELECT * FROM bot.message WHERE id = (SELECT MAX(`id`) FROM bot.message WHERE `status` = 3)";
+        $result = $conn->query($sql);
+        $row = $result->fetch();
+        return $row['text'];
+    }
+    function DropTable()
+    {
+        $conn = new PDO("mysql:localhost:3306;dbname = bot;", "root", "");
+        $sql = "TRUNCATE TABLE bot.message";
+        $conn->query($sql);
+    }
 
 }
 
@@ -33,3 +55,4 @@ catch (PDOException $e) {
     echo "table error" . $e->getMessage();
 }
 
+//print_r(getTextEmail());
