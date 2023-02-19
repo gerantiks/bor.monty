@@ -87,11 +87,22 @@
     }
     elseif (getStatusUserMessage() == '3')
     {
-        $sendEmailAddress = getAddressEmail();  // получаем адресс;
-        $textEmail = getTextEmail(); // получаем сообщение;
-        //sendEmail($addressSmtp, $passwordSmtp, $sendEmailAddress, $textEmail);
-        DropTable();
-        $sendUserMessage = 'Повідомлення надіслано';
+        if ($callbackData == '2')
+        {
+            $sendEmailAddress = getAddressEmail();  // получаем адресс;
+            $textEmail = getTextEmail(); // получаем сообщение;
+            //sendEmail($addressSmtp, $passwordSmtp, $sendEmailAddress, $textEmail);
+            DropTable();
+            $sendUserMessage = 'Повідомлення надіслано';
+        }
+        elseif ($callbackData == '1')
+        {
+            DropTable();
+            $sendUserMessage = 'Введіть будь-ласка команду, мяу';
+        }
+
+
+
 
     }
     else
@@ -141,7 +152,6 @@
     }
     elseif(isset($callbackChatId)) //проверка на наличие запроса $callbackData
     {
-        {
             $sendUserMessage = http_build_query(
                 [
                     'chat_id' => $callbackChatId,
@@ -149,7 +159,7 @@
                 ]
             );
             sendTelegram($token, $sendUserMessage);
-        }
+
     }
     else
     {
