@@ -1,26 +1,29 @@
 <?php
-
 $data = json_decode(file_get_contents('php://input'), true);
 
+//Проверка на наличие
+if (isset($data['message']['document']))
+{
+    SaveFile($data);
+} 
 
-$file_id = $data['message']['photo'][0]['file_id'];
-print_r($file_id);
-$url = 'https://api.telegram.org/bot5648217050:AAE6z4NHLIJRbQv6hFVH5xIernfN6Hdn-iQ/'.$file_id;
-$local_file_path = '\send';
+function SaveFile($data)
+{
+    //Информация про одержанный файл
+    $fileId = $data['message']['document']['file_id'];
+    $fileName = $data['message']['document']['file_name'];
 
-file_put_contents($local_file_path, file_get_contents($url), FILE_APPEND);
-//if (isset($data[]))
-//file_put_contents('test.txt', '$data: ' . print_r($data, 1) . "\n", FILE_APPEND);
+    $url = 'https://api.telegram.org/bot5648217050:AAE6z4NHLIJRbQv6hFVH5xIernfN6Hdn-iQ/getFile?file_id='.$fileId;
+    $fileInfo = json_decode(file_get_contents($url), true);
 
-//if (isset($data['message']['document']) || isset($data['message']['photo']))
-//{
-//    //$file = file_put_contents('send.txt', '$file: ' . print_r($data['message']['document'], 1) . "\n", FILE_APPEND );
-//
-//}
+    //ccылка на файл
+    $filePath = $fileInfo['result']['file_path'];
+
+    //Сохраняем на сервер
+    $file = file_get_contents("https://api.telegram.org/file/bot5648217050:AAE6z4NHLIJRbQv6hFVH5xIernfN6Hdn-iQ/".$filePath);
+    file_put_contents("/var/www/bot.monty/send/$fileName", $file);
+}
 
 
 
-//
-
-//print_r($file);
 
