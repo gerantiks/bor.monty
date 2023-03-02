@@ -1,23 +1,13 @@
 <?php
-
-
-    require __DIR__ . '/vendor/autoload.php';  //подключение файла автозагрузки с добавленой в composer PHPMailer библиотекой.
-    require __DIR__ . '/inline_keyboard.php';
-    require __DIR__ . '/BD_example.php';
-    require  __DIR__ . '/Secret_info.php';
-
-    use PHPMailer\PHPMailer\PHPMailer;
-    use PHPMailer\PHPMailer\SMTP;
+require __DIR__ . '/BD_example.php';
+require  __DIR__ . '/Secret_info.php';
+require __DIR__ . '/SendEmail.php';
+require __DIR__ . '/SendFile.php';
+require __DIR__ . '/GetAndSaveFiles.php';
 
     /**
      * @var array $keyboard;
-     * @var $token;
-     * @var $linkNgrok;
-     * @var $passwordSmtp;
-     * @var $addressSmtp;
      */
-
-    $linkWebhook = "https://api.telegram.org/bot$token/setwebhook?url=$linkNgrok";
 
     $data = json_decode(file_get_contents('php://input'), true); // получает информацию в виде json строки и декодирует;
     file_put_contents('file.txt', '$data: '. print_r($data, 1) . "\n", FILE_APPEND); // записивает в файл file.txt, массив $data c флагом FILE_APPENDED до запись (без него перезапись);
@@ -27,48 +17,6 @@
     $getChatId = $data['message']['chat']['id'];
     $callbackChatId = $data['callback_query']['message']['chat']['id'];  // chat_id через кнопки
     $callbackData= $data['callback_query']['data']; //data через кнопки;
-
-
-    function sendEmail($addressSmtp, $passwordSmtp, $sendEmailAddress, $textEmail)
-    {
-
-        $topicEmail = "List";
-
-        $mail = new PHPMailer();
-
-        $mail->isSMTP();
-
-        $mail->SMTPDebug = SMTP::DEBUG_SERVER;
-
-        $mail->Host = 'smtp.gmail.com';
-
-        $mail->Port = 587;
-
-        $mail->SMTPAuth = true;
-
-        $mail->Username =  $addressSmtp;
-
-        $mail->Password = $passwordSmtp;
-
-        $mail->setFrom('cajihe4885@brandoza.com', 'Anonim');
-
-        $mail->addAddress($sendEmailAddress, "");
-
-        $mail->Subject = $topicEmail;
-
-        //$mail->msgHTML(file_get_contents('contents.html'), __DIR__);
-
-        $mail->Body = $textEmail;
-
-        //$mail->addAttachment('images/phpmailer_mini.png');
-
-        if (!$mail->send()) {
-            $sendUserMassage = 'Mailer Error: ' . $mail->ErrorInfo;
-        } else {
-            $sendUserMassage = 'Message sent!';
-        }
-        return $sendUserMassage;
-    }
 
 
     if (getStatusUserMessage() == '1')
@@ -100,10 +48,6 @@
             DropTable();
             $sendUserMessage = 'Введіть будь-ласка команду, мяу';
         }
-
-
-
-
     }
     else
     {
@@ -128,7 +72,6 @@
                 $sendUserMessage = "Не зрозуміло";
         }
     }
-
 
 
     if (isset($statusId)) //проверка на наличие статуса
