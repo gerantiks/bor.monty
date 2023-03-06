@@ -4,23 +4,12 @@
 По окончанию выполнения отправки или неудачной попытки, директория send будет очищаться.
 */
 $dir = __DIR__ . "/send/"; //Путь к папке, куда временно будут сохраняться файли от пользователя
-
-require __DIR__ . '/Secret_info.php';
-
-    /** 
-         * @var $passwordSmtp;
-         * @var $addressSmtp;
-         * @var $sendEmailAddress;
-         * @var $textEmail;
-     */
-    
+require __DIR__ . '/Secret_info.php';   
 require __DIR__ . '/vendor/autoload.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 function sendEmail($addressSmtp, $passwordSmtp, $sendEmailAddress, $textEmail, $files, $dir)
 {
-
-    $topicEmail = "List";
 
     $mail = new PHPMailer(); //создаем обьект
 
@@ -28,12 +17,12 @@ function sendEmail($addressSmtp, $passwordSmtp, $sendEmailAddress, $textEmail, $
 
     $mail->isSMTP(); // способ отправки протокол SMTP
 
-    $mail->SMTPDebug = SMTP::DEBUG_SERVER; 
+    $mail->SMTPDebug = SMTP::DEBUG_SERVER;
 
     $mail->Host = 'smtp.gmail.com'; //SMTP сервер для отпраки
 
     $mail->Port = 587; //порт 
-        
+            
     $mail->SMTPAuth = true; //авторизация на SMTP сервере
 
     $mail->Username =  $addressSmtp; //Логин почтового ящика отправителя
@@ -44,7 +33,7 @@ function sendEmail($addressSmtp, $passwordSmtp, $sendEmailAddress, $textEmail, $
 
     $mail->addAddress($sendEmailAddress, ""); //Получатель
 
-    $mail->Subject = $topicEmail; //Тема письма
+    $mail->Subject = 'Тест'; //Тема письма
 
     $mail->Body = $textEmail; //Текст письма
 
@@ -52,40 +41,22 @@ function sendEmail($addressSmtp, $passwordSmtp, $sendEmailAddress, $textEmail, $
     foreach ($files as $file){
         $mail->addAttachment( "{$dir}{$file}",  $file); //Прикрепить файли
     }
-
-    if (!$mail->send()) {
-        $sendUserMassage = 'Mailer Error: ' . $mail->ErrorInfo;
+    if (!$mail->send()){
+        $sendUserMessage = "Ошибка при отправке письма ";
+        file_put_contents('log.txt', "MailError: " . $mail->ErrorInfo, FILE_APPEND); //запись логов ошибок в файл
     } else {
-        $sendUserMassage = 'Email sent without error';
+        $sendUserMessage = "Письмо отправлено";
     }
-
-    return $sendUserMassage;
+   return $sendUserMessage;
 }
 
-//Функция создает массив с именами файлов, что находяться в папке send
-function getArrayNamesFilesInSend ($dir)
+//Проверка правильности формата адреса електронной почты
+function validationAddress($sendEmailAddress)
 {
-    if (glob($dir . '*')){   //проверка на наличе файлов в директории
-        $files = scandir($dir);
-        unset ($files['0'], $files['1']);
-        $files=array_values($files); //переиндексация массива
-    } else {
-        $files = null;
-    }  
-    return $files;
+    $mail = new PHPMailer();
+    $mail->validateAddress($sendEmailAddress);
+    $result = $mail->validateAddress($sendEmailAddress);
+    return $result;
 }
 
-//Функция удаляет файли что лежат в директории send
-function delFilesInSend($dir) 
-{
-    $delFiles = glob($dir . "*");
-    foreach ($delFiles as $file){
-        if (file_exists($file)){
-            unlink($file);  // удалить файл
-        }  
-    }
-}
 
- $files = getArrayNamesFilesInSend($dir);
- sendEmail($addressSmtp, $passwordSmtp, $sendEmailAddress, $textEmail, $files, $dir);
- delFilesInSend($dir);

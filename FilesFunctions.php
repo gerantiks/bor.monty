@@ -1,23 +1,8 @@
 <?php
-//Блок для получения и сохранения, файлов или фото в папке сервера
+//Блок для работы с файлами или фото в папке сервера
 
 require __DIR__ . '/Secret_info.php';
-    /**
-     * @var $token;
-     */
-$data = json_decode(file_get_contents('php://input'), true);
-file_put_contents('test.txt', '$data' . print_r($data, 1) . "\n", FILE_APPEND);
-
-//Проверка на наличие значение в массиве
-if (isset($data['message']['document']))
-{
-    SaveFile($data, $token);
-
-} elseif (isset($data['message']['photo']))
-{
-    SavePhoto($data, $token);
-} 
-
+ 
 function SaveFile($data, $token)
 {
     //Информация про одержанный файл
@@ -49,4 +34,27 @@ function SavePhoto($data, $token)
     file_put_contents("/var/www/bot.monty/send/" . microtime(true) .'.jpg', file_get_contents($url));
 }
 
+//Функция создает массив с именами файлов, что находяться в папке send
+function getArrayNamesFilesInSend ($dir)
+{
+    if (glob($dir . '*')){   //проверка на наличе файлов в директории
+        $files = scandir($dir);
+        unset ($files['0'], $files['1']);
+        $files=array_values($files); //переиндексация массива
+    } else {
+        $files = null;
+    }  
+    return $files;
+}
+
+//Функция удаляет файли что лежат в директории send
+function delFiles($dir) 
+{
+    $delFiles = glob($dir . "*");
+    foreach ($delFiles as $file){
+        if (file_exists($file)){
+            unlink($file);  // удалить файл в директории send
+        }  
+    }
+}
 
