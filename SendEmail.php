@@ -43,7 +43,7 @@ function sendEmail($addressSmtp, $passwordSmtp, $sendEmailAddress, $textEmail, $
     }
     if (!$mail->send()){
         $sendUserMessage = "Ошибка при отправке письма ";
-        file_put_contents('log.txt', "MailError: " . $mail->ErrorInfo, FILE_APPEND); //запись логов ошибок в файл
+        file_put_contents('log.txt', "MailError: " . $mail->ErrorInfo . "\n", FILE_APPEND); //запись логов ошибок в файл
     } else {
         $sendUserMessage = "Письмо отправлено";
     }

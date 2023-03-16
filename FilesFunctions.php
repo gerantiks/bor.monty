@@ -12,12 +12,12 @@ function SaveFile($data, $token)
     $url = "https://api.telegram.org/bot{$token}/getFile?file_id=".$fileId;
     $fileInfo = json_decode(file_get_contents($url), true);
 
-    //ccылка на файл
+    //cсылка на файл
     $filePath = $fileInfo['result']['file_path'];
 
     //Сохраняем на сервер
     $file = file_get_contents("https://api.telegram.org/file/bot{$token}/".$filePath);
-    file_put_contents("/var/www/bot.monty/send/$fileName", $file);
+    file_put_contents(__DIR__ . "/send/$fileName", $file);
 }
 
 function SavePhoto($data, $token)
@@ -31,7 +31,7 @@ function SavePhoto($data, $token)
 
     $url = "https://api.telegram.org/file/bot{$token}/" . $photoPath;
     //Название сжатых фото, это микросекунди, которые сохраняем на сервер
-    file_put_contents("/var/www/bot.monty/send/" . microtime(true) .'.jpg', file_get_contents($url));
+    file_put_contents(__DIR__ . "/send/" . microtime(true) .'.jpg', file_get_contents($url));
 }
 
 //Функция создает массив с именами файлов, что находяться в папке send

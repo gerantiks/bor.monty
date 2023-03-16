@@ -1,12 +1,11 @@
 <?php
 require __DIR__ . '/BD_query.php';
 require  __DIR__ . '/Secret_info.php';
-require __DIR__ . '/Inline_keyboard.php';
+require __DIR__ . '/Keyboard.php';
 require __DIR__ . '/SendEmail.php';
 require __DIR__ . '/FilesFunctions.php';
-
+    
     /**
-     * @var array $keyboard;
      * @var $token;
      * @var $addressSmtp;
      * @var $passwordSmtp;
@@ -23,6 +22,15 @@ require __DIR__ . '/FilesFunctions.php';
     $callbackChatId = $data['callback_query']['message']['chat']['id'];  // chat_id через кнопки
     $callbackData= $data['callback_query']['data']; //data через кнопки;
 
+    $status = getStatus();
+
+    if ($callbackData == '1') //Отмена отправки пользователем введенных ранее данных
+        {
+            DropTable();
+            delFiles($dir);
+            $status = null;
+            $sendUserMessage = 'Введіть будь-ласка команду, мяу';
+        };
 
     if (getStatus() == '1') //Проверка статуса диалога бота и пользователя
     {
@@ -32,39 +40,40 @@ require __DIR__ . '/FilesFunctions.php';
         {
             $sendUserMessage = "Введіть текст повідомлення:";
             $status = '2';
+            $callback = ['callback_query'=> '0'];  
+            $data = array_merge($data, $callback);
         } else {
             $status = '1';
             $sendUserMessage = "Вы ввели несуществующий адресс, введите повторно";
+            $callback = ['callback_query'=> '0'];  
+            $data = array_merge($data, $callback);
         }
         
         
     }
     elseif (getStatus() == '2')
     {
-        //Проверка на наличии файлов, фото с последующей записью на папку сервера 
+        //Проверка на наличии файлов, фото с последующей записью на папку сервера
         if (isset($data['message']['document']))
         {
             SaveFile($data, $token);
-            $getUserMessage = $data['message']['caption'];
         } 
         elseif (isset($data['message']['photo']))
         {
             SavePhoto($data, $token);
-            $getUserMessage = $data['message']['caption'];
         } else {
-            $status = '3'; 
-            $callback = ['callback_query'=> "0" ];  
-            $data = array_merge($data, $callback); //добавляем в массив data, callback для вызова кнопок
-            $sendUserMessage = 'Пару секунд... Підтвердіть відправку натиснувши кнопку внизу';  
+            $status = '3';   
+            $data['callback_query'] = '0'; //добавляем в массив data, callback для вызова кнопок
+            $sendUserMessage = 'Пару секунд... Підтвердіть відправку натиснувши кнопку внизу';
         }
-        
+
     }
 
     elseif (getStatus() == '3')
     {
         if ($callbackData == '2')  //Подтверждение отправки письма
         {
-            $sendEmailAddress = putColumnText('2');  // выбираем адрес;
+            $sendEmailAddress = getAdress();  // выбираем адрес;
             $textEmail = putColumnText('3'); // выбираем текст сообщение;
             $files = getArrayNamesFilesInSend($dir); //проверяет на наличие файлов в send
 
@@ -77,14 +86,9 @@ require __DIR__ . '/FilesFunctions.php';
             
             $sendUserMessage = $result;
 
+            $status = null;
             delFiles($dir);
             DropTable();
-        }
-        elseif ($callbackData == '1') //Отмена отправки пользователем введенных ранее данных
-        {
-            DropTable();
-            delFiles($dir);
-            $sendUserMessage = 'Введіть будь-ласка команду, мяу';
         }
     }
     else
@@ -96,27 +100,34 @@ require __DIR__ . '/FilesFunctions.php';
                     Знизу є кнопки з моїми вміннями. Якщо, щось буде потрібно виберіть кнопку і я зроблю за вас.";
                 break;
 
-            case "email":
+            case "відправити лист":
                 $sendUserMessage = "Введіть будь-ласка вашу почту, нижче без помилок і повністю";
                 $status = '1';
+                $callback = ['callback_query'=> '0'];  
+                $data = array_merge($data, $callback);
                 break;
 
 
-            case "Отправить":
-                $sendUserMessage = "Ваш лист відправлено";
+            case "інструкція листа":
+                $sendUserMessage = "Для відправки листа необхідно: вказати почту і написати текст (також можна додавати фото і файли). Потрібно вірно вказати
+ адрес електронної почти. Відправити фото або файл можна лише з текстом. Спочатку додаєте файл і після вказуєте текст листа. Тему листа встановлена автоматично List. Зверху 
+ наведено фото вірно прикріплених файлів для відправки. У разі помилки зверніться до автора: https://t.me/V1ad5olfeR";
                 break;
 
             default:
-                $sendUserMessage = "Не зрозуміло";
+                if ($callbackData == '1') {
+                    $sendUserMessage = "Виберіть дію";
+                } else {
+                    $sendUserMessage = "Не розумію, користуйтеся інструкцією";
+                }
+                
         }
     }
    
     //Добавление информации в БД
-    if (isset($status)){
+    if (isset($status)) {
         InsertChatTextStatus($getChatId, $getUserMessage, $status);
-    } else {
-        InsertChatText($getChatId, $getUserMessage);
-    }  
+    }
     
     //Условия перед отправкой юзеру ответа
     if ($data['callback_query'] == '0') // добавляет кнопки callback
@@ -127,7 +138,13 @@ require __DIR__ . '/FilesFunctions.php';
                 'text' =>$sendUserMessage
             ]
         );
-        sendTelegramKeyboard($token, $sendUserMessage, $keyboard);
+
+        if ($status == '1' || $status == '2') {
+            sendTelegramKeyboard($token, $sendUserMessage, $keyboard($buttonCancel));
+        } else {
+            sendTelegramKeyboard($token, $sendUserMessage, $keyboard($buttonsCancelOrSend));
+        }
+
     }
     elseif(isset($callbackChatId)) //проверка на наличие выбраной кнопки $callbackData
     {
@@ -140,6 +157,22 @@ require __DIR__ . '/FilesFunctions.php';
             sendTelegram($token, $sendUserMessage);
 
     }
+    elseif($getUserMessage == "інструкція листа") {
+        $arrayQuery =
+            [
+                'chat_id' => $getChatId,
+                'caption' => $sendUserMessage,
+                'photo' => curl_file_create(__DIR__. "/Foto/Email_Instruction.png")
+            ];
+        $url = "https://api.telegram.org/bot$token/sendPhoto";
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $arrayQuery);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        $result = curl_exec($ch);
+        curl_close($ch);
+    }
     else
     {
         $sendUserMessage = http_build_query(
@@ -148,11 +181,10 @@ require __DIR__ . '/FilesFunctions.php';
                 'text' =>$sendUserMessage
             ]
         );
-        
-        sendTelegram($token, $sendUserMessage);
+        sendTelegramKeyboard($token, $sendUserMessage, $keyboard($buttonsMessageOrWeather));
     }
     
-    function sendTelegram($token, $sendUserMessage)
+    function sendTelegram($token, $sendUserMessage): void
     {
         file_get_contents("https://api.telegram.org/bot$token/sendMessage?".$sendUserMessage);
         // | читает файл в строку, используеться http_build_query для генерации URL запроса что содержит масcив или обьект.
@@ -163,4 +195,4 @@ require __DIR__ . '/FilesFunctions.php';
         file_get_contents("https://api.telegram.org/bot$token/sendMessage?" . $sendUserMessage . "&reply_markup=". $keyboard);
     }
     
-    
+  //DropTable();

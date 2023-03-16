@@ -35,6 +35,27 @@
         return $row['text'];
     }
 
+    function getAdress()
+    {
+        $conn = new PDO("mysql:localhost:3306;dbname = bot", "user1", "");
+        $sql = "SELECT * FROM bot.message WHERE id = (SELECT MAX(`id`) FROM bot.message WHERE `status` = '2'
+                    AND `text` != '')";
+        $result = $conn->query($sql);
+        $row = $result->fetch();
+        return $row['text'];
+
+    }
+
+//    function getAdress()
+//    {
+//        $conn = new PDO("mysql:localhost:3306;dbname = bot", "user1", "");
+//        $sql = "SELECT * FROM bot.message WHERE id = (SELECT MAX(`id`) FROM bot.message WHERE `status` = '2'
+//                AND `text` IS NOT NULL)";
+//        $result = $conn->query($sql);
+//        $row = $result->fetch();
+//        return $row['text'];
+//    }
+
     //Сброс таблицы
     function DropTable()
     {
