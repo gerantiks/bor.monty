@@ -4,8 +4,8 @@
 По окончанию выполнения отправки или неудачной попытки, директория send будет очищаться.
 */
 $dir = __DIR__ . "/send/"; //Путь к папке, куда временно будут сохраняться файли от пользователя
-require __DIR__ . '/Secret_info.php';   
-require __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/Secret_info.php';
+require_once __DIR__ . '/vendor/autoload.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 function sendEmail($addressSmtp, $passwordSmtp, $sendEmailAddress, $textEmail, $files, $dir)

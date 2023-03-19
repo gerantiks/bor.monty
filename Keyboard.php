@@ -33,8 +33,8 @@ $buttonsMessageOrWeather = [
     'keyboard' =>[ 
         [
             ['text' => "Відправити лист"],
-            ['text' => "Погода"],
-            ['text' => "Інструкція листа"]
+            ['text' => "Синоптік інструкція"],
+            ['text' => "інструкція листа"]
         ],
     ],
     'resize_keyboard' => true,
@@ -48,6 +48,4 @@ $keyboard = function($buttons)
     return json_encode($buttons);
 };
 
-
-var_dump($keyboard($buttonsCancelOrSend));
 
